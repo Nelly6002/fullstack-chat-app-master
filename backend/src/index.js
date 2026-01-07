@@ -20,7 +20,7 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(
   cors({
-    origin: "https://fullstack-chat-app-master-omega.vercel.app/",
+    origin: "https://fullstack-chat-app-master-omega.vercel.app",
     credentials: true,
   })
 );
