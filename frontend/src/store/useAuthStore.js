@@ -82,6 +82,63 @@ export const useAuthStore = create((set, get) => ({
     }
   },
 
+  searchUsers: async (query) => {
+    try {
+      const res = await axiosInstance.get(`/auth/search?query=${query}`);
+      return res.data;
+    } catch (error) {
+      toast.error(error.response.data.message);
+      return [];
+    }
+  },
+
+  sendFriendRequest: async (userId) => {
+    try {
+      await axiosInstance.post(`/auth/friend-request/${userId}`);
+      toast.success("Friend request sent");
+    } catch (error) {
+      toast.error(error.response.data.message);
+    }
+  },
+
+  acceptFriendRequest: async (userId) => {
+    try {
+      await axiosInstance.post(`/auth/accept-friend/${userId}`);
+      toast.success("Friend request accepted");
+    } catch (error) {
+      toast.error(error.response.data.message);
+    }
+  },
+
+  declineFriendRequest: async (userId) => {
+    try {
+      await axiosInstance.post(`/auth/decline-friend/${userId}`);
+      toast.success("Friend request declined");
+    } catch (error) {
+      toast.error(error.response.data.message);
+    }
+  },
+
+  getFriendRequests: async () => {
+    try {
+      const res = await axiosInstance.get("/auth/friend-requests");
+      return res.data;
+    } catch (error) {
+      toast.error(error.response.data.message);
+      return [];
+    }
+  },
+
+  getFriends: async () => {
+    try {
+      const res = await axiosInstance.get("/auth/friends");
+      return res.data;
+    } catch (error) {
+      toast.error(error.response.data.message);
+      return [];
+    }
+  },
+
   connectSocket: () => {
     const { authUser } = get();
     if (!authUser || get().socket?.connected) return;
@@ -97,6 +154,14 @@ export const useAuthStore = create((set, get) => ({
 
     socket.on("getOnlineUsers", (userIds) => {
       set({ onlineUsers: userIds });
+    });
+
+    socket.on("friendRequest", (data) => {
+      toast.success("You have a new friend request!");
+    });
+
+    socket.on("newMessage", (message) => {
+      toast.success(`New message from ${message.senderId}`);
     });
   },
   disconnectSocket: () => {

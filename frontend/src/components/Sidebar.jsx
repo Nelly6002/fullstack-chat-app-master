@@ -48,12 +48,12 @@ const Sidebar = () => {
             key={user._id}
             onClick={() => setSelectedUser(user)}
             className={`
-              w-full p-3 flex items-center gap-3
+              w-full p-3 flex flex-col items-center gap-2 lg:flex-row lg:items-center lg:gap-3
               hover:bg-base-300 transition-colors
               ${selectedUser?._id === user._id ? "bg-base-300 ring-1 ring-base-300" : ""}
             `}
           >
-            <div className="relative mx-auto lg:mx-0">
+            <div className="relative">
               <img
                 src={user.profilePic || "/avatar.png"}
                 alt={user.name}
@@ -67,10 +67,10 @@ const Sidebar = () => {
               )}
             </div>
 
-            {/* User info - only visible on larger screens */}
-            <div className="hidden lg:block text-left min-w-0">
-              <div className="font-medium truncate">{user.fullName}</div>
-              <div className="text-sm text-zinc-400">
+            {/* User info - visible on all screens */}
+            <div className="text-center lg:text-left min-w-0">
+              <div className="font-medium truncate text-sm lg:text-base">{user.fullName}</div>
+              <div className="text-xs text-zinc-400 hidden lg:block">
                 {onlineUsers.includes(user._id) ? "Online" : "Offline"}
               </div>
             </div>
