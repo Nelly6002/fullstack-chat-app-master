@@ -19,15 +19,32 @@ export const getUsersForSidebar = async (req, res) => {
 
 export const getMessages = async (req, res) => {
   try {
-    const { id: userToChatId } = req.params;
+    const { id: chatId } = req.params;
+    const { type, page = 1, limit = 50 } = req.query; // Add pagination
     const myId = req.user._id;
+    const skip = (page - 1) * limit;
 
-    const messages = await Message.find({
-      $or: [
-        { senderId: myId, receiverId: userToChatId },
-        { senderId: userToChatId, receiverId: myId },
-      ],
-    }).populate('replyTo');
+    let messages;
+    if (type === 'group') {
+      // Check if user is member of group
+      const Group = (await import("../models/group.model.js")).default;
+      const group = await Group.findById(chatId);
+      if (!group || !group.members.includes(myId)) {
+        return res.status(403).json({ message: "Not a member of this group" });
+      }
+      messages = await Message.find({ groupId: chatId, deleted: false }).populate('replyTo senderId').sort({ createdAt: -1 }).skip(skip).limit(limit);
+    } else {
+      messages = await Message.find({
+        $or: [
+          { senderId: myId, receiverId: chatId },
+          { senderId: chatId, receiverId: myId },
+        ],
+        deleted: false,
+      }).populate('replyTo').sort({ createdAt: -1 }).skip(skip).limit(limit);
+    }
+
+    // Reverse to show oldest first
+    messages.reverse();
 
     res.status(200).json(messages);
   } catch (error) {
@@ -38,8 +55,7 @@ export const getMessages = async (req, res) => {
 
 export const sendMessage = async (req, res) => {
   try {
-    const { text, image, replyTo } = req.body;
-    const { id: receiverId } = req.params;
+    const { text, image, replyTo, type, chatId } = req.body; // type: 'user' or 'group'
     const senderId = req.user._id;
 
     let imageUrl;
@@ -51,20 +67,45 @@ export const sendMessage = async (req, res) => {
 
     const newMessage = new Message({
       senderId,
-      receiverId,
       text,
       image: imageUrl,
       replyTo,
     });
 
+    if (type === 'group') {
+      newMessage.groupId = chatId;
+      // Check membership
+      const Group = (await import("../models/group.model.js")).default;
+      const group = await Group.findById(chatId);
+      if (!group || !group.members.includes(senderId)) {
+        return res.status(403).json({ message: "Not a member of this group" });
+      }
+    } else {
+      newMessage.receiverId = chatId;
+    }
+
     await newMessage.save();
 
     // Populate replyTo if exists
-    await newMessage.populate('replyTo');
+    await newMessage.populate('replyTo senderId');
 
-    const receiverSocketId = getReceiverSocketId(receiverId);
+    const receiverSocketId = getReceiverSocketId(chatId);
     if (receiverSocketId) {
       io.to(receiverSocketId).emit("newMessage", newMessage);
+    }
+
+    // For groups, emit to all members
+    if (type === 'group') {
+      const Group = (await import("../models/group.model.js")).default;
+      const group = await Group.findById(chatId).populate('members');
+      group.members.forEach(member => {
+        if (member._id.toString() !== senderId.toString()) {
+          const socketId = getReceiverSocketId(member._id.toString());
+          if (socketId) {
+            io.to(socketId).emit("newMessage", newMessage);
+          }
+        }
+      });
     }
 
     res.status(201).json(newMessage);
@@ -77,6 +118,18 @@ export const editMessage = async (req, res) => {
   try {
     const { messageId } = req.params;
     const { text } = req.body;
+    const userId = req.user._id;
+
+    const message = await Message.findById(messageId);
+    if (!message || message.senderId.toString() !== userId.toString()) {
+      return res.status(403).json({ message: "Cannot edit this message" });
+    }
+
+    // Check time limit: 5 minutes
+    const timeDiff = Date.now() - new Date(message.createdAt).getTime();
+    if (timeDiff > 5 * 60 * 1000) {
+      return res.status(400).json({ message: "Cannot edit message after 5 minutes" });
+    }
 
     const updatedMessage = await Message.findByIdAndUpdate(
       messageId,
@@ -88,19 +141,27 @@ export const editMessage = async (req, res) => {
       { new: true }
     );
 
-    if (!updatedMessage) {
-      return res.status(404).json({ message: "Message not found" });
-    }
-
-    const receiverSocketId = getReceiverSocketId(updatedMessage.receiverId.toString());
-    if (receiverSocketId) {
-      io.to(receiverSocketId).emit("messageEdited", updatedMessage);
+    // Emit to receiver or group members
+    if (updatedMessage.groupId) {
+      const Group = (await import("../models/group.model.js")).default;
+      const group = await Group.findById(updatedMessage.groupId).populate('members');
+      group.members.forEach(member => {
+        const socketId = getReceiverSocketId(member._id.toString());
+        if (socketId) {
+          io.to(socketId).emit("messageEdited", updatedMessage);
+        }
+      });
+    } else {
+      const receiverSocketId = getReceiverSocketId(updatedMessage.receiverId.toString());
+      if (receiverSocketId) {
+        io.to(receiverSocketId).emit("messageEdited", updatedMessage);
+      }
     }
 
     res.status(200).json(updatedMessage);
   } catch (error) {
-    console.log("Error editing message:", error.message);
-    res.status(500).json({ message: "Internal server error" });
+    console.log("Error in editMessage controller: ", error.message);
+    res.status(500).json({ error: "Internal server error" });
   }
 };
 
@@ -110,25 +171,110 @@ export const deleteMessage = async (req, res) => {
     const userId = req.user._id;
 
     const message = await Message.findById(messageId);
+    if (!message || message.senderId.toString() !== userId.toString()) {
+      return res.status(403).json({ message: "Cannot delete this message" });
+    }
+
+    // Check time limit: 5 minutes
+    const timeDiff = Date.now() - new Date(message.createdAt).getTime();
+    if (timeDiff > 5 * 60 * 1000) {
+      return res.status(400).json({ message: "Cannot delete message after 5 minutes" });
+    }
+
+    await Message.findByIdAndUpdate(messageId, {
+      deleted: true,
+      deletedAt: new Date(),
+    });
+
+    // Emit to receiver or group members
+    if (message.groupId) {
+      const Group = (await import("../models/group.model.js")).default;
+      const group = await Group.findById(message.groupId).populate('members');
+      group.members.forEach(member => {
+        const socketId = getReceiverSocketId(member._id.toString());
+        if (socketId) {
+          io.to(socketId).emit("messageDeleted", messageId);
+        }
+      });
+    } else {
+      const receiverSocketId = getReceiverSocketId(message.receiverId.toString());
+      if (receiverSocketId) {
+        io.to(receiverSocketId).emit("messageDeleted", messageId);
+      }
+    }
+
+    res.status(200).json({ message: "Message deleted" });
+  } catch (error) {
+    console.log("Error in deleteMessage controller: ", error.message);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+export const searchMessages = async (req, res) => {
+  try {
+    const { chatId, query, type } = req.query;
+    const userId = req.user._id;
+
+    let filter = { deleted: false, text: { $regex: query, $options: "i" } };
+
+    if (type === 'group') {
+      filter.groupId = chatId;
+      // Check membership
+      const Group = (await import("../models/group.model.js")).default;
+      const group = await Group.findById(chatId);
+      if (!group || !group.members.includes(userId)) {
+        return res.status(403).json({ message: "Not a member of this group" });
+      }
+    } else {
+      filter.$or = [
+        { senderId: userId, receiverId: chatId },
+        { senderId: chatId, receiverId: userId },
+      ];
+    }
+
+    const messages = await Message.find(filter).populate('senderId').sort({ createdAt: -1 });
+    res.status(200).json(messages);
+  } catch (error) {
+    console.log("Error in searchMessages controller: ", error.message);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+export const markAsRead = async (req, res) => {
+  try {
+    const { messageId } = req.params;
+    const userId = req.user._id;
+
+    const message = await Message.findById(messageId);
     if (!message) {
       return res.status(404).json({ message: "Message not found" });
     }
 
-    if (message.senderId.toString() !== userId.toString()) {
-      return res.status(403).json({ message: "You can only delete your own messages" });
+    // Check if user can read this message
+    let canRead = false;
+    if (message.groupId) {
+      const Group = (await import("../models/group.model.js")).default;
+      const group = await Group.findById(message.groupId);
+      canRead = group && group.members.includes(userId);
+    } else {
+      canRead = message.senderId.toString() === userId.toString() || message.receiverId.toString() === userId.toString();
     }
 
-    await Message.findByIdAndDelete(messageId);
-
-    const receiverSocketId = getReceiverSocketId(message.receiverId.toString());
-    if (receiverSocketId) {
-      io.to(receiverSocketId).emit("messageDeleted", messageId);
+    if (!canRead) {
+      return res.status(403).json({ message: "Cannot read this message" });
     }
 
-    res.status(200).json({ message: "Message deleted successfully" });
+    // Add to readBy if not already
+    const alreadyRead = message.readBy.some(read => read.userId.toString() === userId.toString());
+    if (!alreadyRead) {
+      message.readBy.push({ userId });
+      await message.save();
+    }
+
+    res.status(200).json({ message: "Marked as read" });
   } catch (error) {
-    console.log("Error deleting message:", error.message);
-    res.status(500).json({ message: "Internal server error" });
+    console.log("Error in markAsRead controller: ", error.message);
+    res.status(500).json({ error: "Internal server error" });
   }
 };
 

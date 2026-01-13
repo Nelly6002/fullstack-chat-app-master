@@ -5,14 +5,15 @@ import SidebarSkeleton from "./skeletons/SidebarSkeleton";
 import { Users } from "lucide-react";
 
 const Sidebar = () => {
-  const { getUsers, users, selectedUser, setSelectedUser, isUsersLoading } = useChatStore();
+  const { getUsers, users, selectedUser, setSelectedUser, isUsersLoading, getGroups, groups, selectedGroup, setSelectedGroup } = useChatStore();
 
   const { onlineUsers } = useAuthStore();
   const [showOnlineOnly, setShowOnlineOnly] = useState(false);
 
   useEffect(() => {
     getUsers();
-  }, [getUsers]);
+    getGroups();
+  }, [getUsers, getGroups]);
 
   const filteredUsers = showOnlineOnly
     ? users.filter((user) => onlineUsers.includes(user._id))
@@ -43,6 +44,32 @@ const Sidebar = () => {
       </div>
 
       <div className="overflow-y-auto w-full py-3">
+        {/* Groups */}
+        {groups.map((group) => (
+          <button
+            key={group._id}
+            onClick={() => setSelectedGroup(group)}
+            className={`
+              w-full p-3 flex flex-col items-center gap-2 lg:flex-row lg:items-center lg:gap-3
+              hover:bg-base-300 transition-colors
+              ${selectedGroup?._id === group._id ? "bg-base-300 ring-1 ring-base-300" : ""}
+            `}
+          >
+            <div className="relative">
+              <img
+                src={group.avatar || "/avatar.png"}
+                alt={group.name}
+                className="size-12 object-cover rounded-full"
+              />
+            </div>
+            <div className="text-center lg:text-left min-w-0">
+              <div className="font-medium truncate text-sm lg:text-base">{group.name}</div>
+              <div className="text-xs text-zinc-400 hidden lg:block">{group.members.length} members</div>
+            </div>
+          </button>
+        ))}
+
+        {/* Users */}
         {filteredUsers.map((user) => (
           <button
             key={user._id}
@@ -70,15 +97,15 @@ const Sidebar = () => {
             {/* User info - visible on all screens */}
             <div className="text-center lg:text-left min-w-0">
               <div className="font-medium truncate text-sm lg:text-base">{user.fullName}</div>
-              <div className="text-xs text-zinc-400 hidden lg:block">
-                {onlineUsers.includes(user._id) ? "Online" : "Offline"}
+              <div className="text-xs text-zinc-400">
+                {onlineUsers.includes(user._id) ? "Online" : `Last seen ${new Date(user.lastSeen).toLocaleString()}`}
               </div>
             </div>
           </button>
         ))}
 
-        {filteredUsers.length === 0 && (
-          <div className="text-center text-zinc-500 py-4">No online users</div>
+        {filteredUsers.length === 0 && groups.length === 0 && (
+          <div className="text-center text-zinc-500 py-4">No contacts or groups</div>
         )}
       </div>
     </aside>

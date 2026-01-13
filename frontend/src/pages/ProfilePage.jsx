@@ -5,6 +5,8 @@ import { Camera, Mail, User } from "lucide-react";
 const ProfilePage = () => {
   const { authUser, isUpdatingProfile, updateProfile } = useAuthStore();
   const [selectedImg, setSelectedImg] = useState(null);
+  const [bio, setBio] = useState(authUser?.bio || "");
+  const [status, setStatus] = useState(authUser?.status || "");
 
   const handleImageUpload = async (e) => {
     const file = e.target.files[0];
@@ -19,6 +21,10 @@ const ProfilePage = () => {
       setSelectedImg(base64Image);
       await updateProfile({ profilePic: base64Image });
     };
+  };
+
+  const handleSaveProfile = async () => {
+    await updateProfile({ bio, status });
   };
 
   return (
@@ -81,6 +87,38 @@ const ProfilePage = () => {
               </div>
               <p className="px-4 py-2.5 bg-base-200 rounded-lg border">{authUser?.email}</p>
             </div>
+          </div>
+
+          <div className="space-y-4">
+            <div className="space-y-1.5">
+              <label className="text-sm text-zinc-400">Bio</label>
+              <textarea
+                value={bio}
+                onChange={(e) => setBio(e.target.value)}
+                className="w-full px-4 py-2.5 bg-base-200 rounded-lg border resize-none"
+                rows={3}
+                placeholder="Tell us about yourself..."
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-sm text-zinc-400">Status</label>
+              <input
+                type="text"
+                value={status}
+                onChange={(e) => setStatus(e.target.value)}
+                className="w-full px-4 py-2.5 bg-base-200 rounded-lg border"
+                placeholder="What's on your mind?"
+              />
+            </div>
+
+            <button
+              onClick={handleSaveProfile}
+              className="btn btn-primary w-full"
+              disabled={isUpdatingProfile}
+            >
+              {isUpdatingProfile ? "Saving..." : "Save Profile"}
+            </button>
           </div>
 
           <div className="mt-6 bg-base-300 rounded-xl p-6">

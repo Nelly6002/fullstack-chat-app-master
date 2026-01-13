@@ -20,6 +20,18 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
+    bio: {
+      type: String,
+      default: "",
+    },
+    status: {
+      type: String,
+      default: "Hey there! I'm using Chatty",
+    },
+    lastSeen: {
+      type: Date,
+      default: Date.now,
+    },
     friends: [{
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",

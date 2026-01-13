@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useAuthStore } from "../store/useAuthStore";
 import { Search, UserPlus, UserCheck, UserX } from "lucide-react";
 import toast from "react-hot-toast";
+import { debounce } from "lodash";
 
 const AddFriend = () => {
   const [query, setQuery] = useState("");
@@ -9,20 +10,28 @@ const AddFriend = () => {
   const [isSearching, setIsSearching] = useState(false);
   const { searchUsers, sendFriendRequest, acceptFriendRequest, declineFriendRequest } = useAuthStore();
 
-  const handleSearch = async (e) => {
-    e.preventDefault();
-    if (!query.trim()) return;
+  const debouncedSearch = useCallback(
+    debounce(async (searchQuery) => {
+      if (!searchQuery.trim()) {
+        setSearchResults([]);
+        return;
+      }
+      setIsSearching(true);
+      try {
+        const results = await searchUsers(searchQuery);
+        setSearchResults(results);
+      } catch (error) {
+        console.error("Search failed:", error);
+      } finally {
+        setIsSearching(false);
+      }
+    }, 300),
+    []
+  );
 
-    setIsSearching(true);
-    try {
-      const results = await searchUsers(query);
-      setSearchResults(results);
-    } catch (error) {
-      console.error("Search failed:", error);
-    } finally {
-      setIsSearching(false);
-    }
-  };
+  useEffect(() => {
+    debouncedSearch(query);
+  }, [query, debouncedSearch]);
 
   const handleSendRequest = async (userId) => {
     await sendFriendRequest(userId);
@@ -58,7 +67,7 @@ const AddFriend = () => {
     <div className="p-4">
       <h2 className="text-lg font-semibold mb-4">Add Friends</h2>
 
-      <form onSubmit={handleSearch} className="mb-4">
+      <form>
         <div className="flex gap-2">
           <input
             type="text"
@@ -67,9 +76,7 @@ const AddFriend = () => {
             onChange={(e) => setQuery(e.target.value)}
             className="flex-1 input input-bordered input-sm"
           />
-          <button type="submit" className="btn btn-sm btn-circle" disabled={isSearching}>
-            {isSearching ? <div className="loading loading-spinner loading-sm"></div> : <Search size={20} />}
-          </button>
+          {isSearching && <div className="loading loading-spinner loading-sm"></div>}
         </div>
       </form>
 

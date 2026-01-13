@@ -1,35 +1,66 @@
 import { useRef, useState, useEffect } from "react";
 import { useChatStore } from "../store/useChatStore";
+import { useAuthStore } from "../store/useAuthStore";
 import { Image, Send, X } from "lucide-react";
 import toast from "react-hot-toast";
+import imageCompression from "browser-image-compression";
 
 const MessageInput = () => {
   const [text, setText] = useState("");
   const [imagePreview, setImagePreview] = useState(null);
   const [isSending, setIsSending] = useState(false);
   const fileInputRef = useRef(null);
-  const { sendMessage, editedMessage, clearEditedMessage, editMessage, replyTo, clearReplyTo } = useChatStore();
+  const typingTimeoutRef = useRef(null);
+  const { sendMessage, editedMessage, clearEditedMessage, editMessage, replyTo, clearReplyTo, selectedUser, selectedGroup } = useChatStore();
+  const { socket } = useAuthStore();
 
+  const handleTyping = (isTyping) => {
+    if (!socket) return;
+    const to = selectedUser ? selectedUser._id : selectedGroup?._id;
+    if (to) {
+      socket.emit("typing", { to, isTyping });
+    }
+  };
 
-useEffect(() => {
-  if (editedMessage) {
-    console.log("Editing message ID:",editedMessage._id);
-    setText(editedMessage.text);
-  }
-}, [editedMessage]);
+  const handleTextChange = (e) => {
+    setText(e.target.value);
+    handleTyping(true);
+    if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+    typingTimeoutRef.current = setTimeout(() => handleTyping(false), 1000);
+  };
 
-  const handleImageChange = (e) => {
+  useEffect(() => {
+    if (editedMessage) {
+      console.log("Editing message ID:",editedMessage._id);
+      setText(editedMessage.text);
+    }
+  }, [editedMessage]);
+
+  const handleImageChange = async (e) => {
     const file = e.target.files[0];
     if (!file.type.startsWith("image/")) {
       toast.error("Please select an image file");
       return;
     }
 
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setImagePreview(reader.result);
-    };
-    reader.readAsDataURL(file);
+    try {
+      // Compress the image
+      const options = {
+        maxSizeMB: 1, // Maximum size in MB
+        maxWidthOrHeight: 1920, // Maximum width or height
+        useWebWorker: true,
+      };
+      const compressedFile = await imageCompression(file, options);
+
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result);
+      };
+      reader.readAsDataURL(compressedFile);
+    } catch (error) {
+      console.error("Error compressing image:", error);
+      toast.error("Failed to compress image");
+    }
   };
 
   const removeImage = () => {
@@ -112,7 +143,7 @@ useEffect(() => {
             className="w-full input input-bordered rounded-lg input-sm sm:input-md"
             placeholder="Type a message..."
             value={text}
-            onChange={(e) => setText(e.target.value)}
+            onChange={handleTextChange}
           />
           <input
             type="file"

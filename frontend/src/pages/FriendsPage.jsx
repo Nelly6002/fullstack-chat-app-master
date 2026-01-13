@@ -1,7 +1,8 @@
 import { useState } from "react";
 import AddFriend from "../components/AddFriend";
 import FriendRequests from "../components/FriendRequests";
-import { Users, UserPlus } from "lucide-react";
+import CreateGroup from "../components/CreateGroup";
+import { Users, UserPlus, MessageSquare } from "lucide-react";
 
 const FriendsPage = () => {
   const [activeTab, setActiveTab] = useState("add");
@@ -25,11 +26,19 @@ const FriendsPage = () => {
               <Users size={16} className="mr-2" />
               Requests
             </button>
+            <button
+              className={`tab ${activeTab === "group" ? "tab-active" : ""}`}
+              onClick={() => setActiveTab("group")}
+            >
+              <MessageSquare size={16} className="mr-2" />
+              Create Group
+            </button>
           </div>
 
           <div className="p-4">
             {activeTab === "add" && <AddFriend />}
             {activeTab === "requests" && <FriendRequests />}
+            {activeTab === "group" && <CreateGroup />}
           </div>
         </div>
       </div>
