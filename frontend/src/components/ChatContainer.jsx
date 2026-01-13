@@ -66,6 +66,10 @@ useEffect(() => {
     setIsSearching(false);
   };
 
+  const handleClickOutside = (event) => {
+     if ( dropdownRef.current && !dropdownRef.current.contains(event.target) ) 
+      { setActiveDropdownId(null); } };
+
   document.addEventListener("mousedown", handleClickOutside);
   return () => {
     document.removeEventListener("mousedown", handleClickOutside);
