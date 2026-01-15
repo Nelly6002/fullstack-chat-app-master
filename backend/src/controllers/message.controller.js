@@ -215,6 +215,8 @@ export const searchMessages = async (req, res) => {
     const { chatId, query, type } = req.query;
     const userId = req.user._id;
 
+    if (!query) return res.status(400).json({ message: "Query is required" });
+
     let filter = { deleted: false, text: { $regex: query, $options: "i" } };
 
     if (type === 'group') {
@@ -226,6 +228,7 @@ export const searchMessages = async (req, res) => {
         return res.status(403).json({ message: "Not a member of this group" });
       }
     } else {
+      // For user chat, chatId is the other user's ID
       filter.$or = [
         { senderId: userId, receiverId: chatId },
         { senderId: chatId, receiverId: userId },
@@ -236,7 +239,8 @@ export const searchMessages = async (req, res) => {
     res.status(200).json(messages);
   } catch (error) {
     console.log("Error in searchMessages controller: ", error.message);
-    res.status(500).json({ error: "Internal server error" });
+    // If casts fail (e.g. invalid object id), return empty list instead of 500
+    res.status(200).json([]);
   }
 };
 
