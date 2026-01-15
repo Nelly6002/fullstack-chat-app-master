@@ -51,21 +51,21 @@ const ChatContainer = () => {
       messageEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
   }, [messages]);
-  useEffect(() => {
-    const handleSearch = async (query) => {
-      if (!query.trim()) {
-        setIsSearching(false);
-        return;
-      }
-      setIsSearching(true);
-      await searchMessages(chatId, query, chatType);
-    };
-
-    const clearSearch = () => {
-      setSearchQuery("");
+  const handleSearch = async (query) => {
+    if (!query.trim()) {
       setIsSearching(false);
-    };
+      return;
+    }
+    setIsSearching(true);
+    await searchMessages(chatId, query, chatType);
+  };
 
+  const clearSearch = () => {
+    setSearchQuery("");
+    setIsSearching(false);
+  };
+
+  useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) { setActiveDropdownId(null); }
     };
@@ -144,7 +144,7 @@ const ChatContainer = () => {
               </div>
 
               <div
-                className={`chat-bubble flex flex-col relative cursor-pointer ${isOwnMessage ? "chat-bubble-primary text-primary-content" : ""}`}
+                className={`chat-bubble flex flex-col relative cursor-pointer ${isOwnMessage ? "chat-bubble-primary text-primary-content" : "chat-bubble-secondary text-secondary-content"}`}
                 onClick={() =>
                   setActiveDropdownId(showDropdown ? null : message._id)
                 }
