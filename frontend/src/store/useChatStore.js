@@ -81,8 +81,11 @@ export const useChatStore = create((set, get) => ({
     const chatId = selectedUser ? selectedUser._id : selectedGroup._id;
 
     socket.on("newMessage", (newMessage) => {
+      const msgSenderId = newMessage.senderId?._id || newMessage.senderId;
+      const msgReceiverId = newMessage.receiverId?._id || newMessage.receiverId;
+
       const isRelevant = selectedUser
-        ? newMessage.senderId === selectedUser._id || newMessage.receiverId === selectedUser._id
+        ? msgSenderId === selectedUser._id || msgReceiverId === selectedUser._id
         : newMessage.groupId === selectedGroup._id;
       if (!isRelevant) return;
 

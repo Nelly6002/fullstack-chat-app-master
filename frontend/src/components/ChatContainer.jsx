@@ -120,7 +120,7 @@ useEffect(() => {
 
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {(isSearching ? searchResults : messages).map((message) => {
-  const isOwnMessage = message.senderId === authUser._id;
+  const isOwnMessage = (message.senderId?._id || message.senderId) === authUser._id;
   const showDropdown = activeDropdownId === message._id;
 
   return (
@@ -213,7 +213,16 @@ useEffect(() => {
 
       {typingUsers.size > 0 && (
         <div className="text-sm text-zinc-400 italic px-4">
-          {Array.from(typingUsers).join(", ")} is typing...
+          {Array.from(typingUsers).map(userId => {
+            if (selectedUser && (selectedUser._id === userId || selectedUser._id === userId.toString())) {
+               return selectedUser.fullName;
+            }
+            if (selectedGroup) {
+              const member = selectedGroup.members.find(m => m._id === userId || m._id === userId.toString());
+              if (member) return member.fullName;
+            }
+            return "Unknown User";
+          }).join(", ")} is typing...
         </div>
       )}
 
