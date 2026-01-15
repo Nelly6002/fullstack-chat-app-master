@@ -5,8 +5,12 @@ import { Camera, Mail, User } from "lucide-react";
 const ProfilePage = () => {
   const { authUser, isUpdatingProfile, updateProfile } = useAuthStore();
   const [selectedImg, setSelectedImg] = useState(null);
-  const [bio, setBio] = useState(authUser?.bio || "");
-  const [status, setStatus] = useState(authUser?.status || "");
+  const [formData, setFormData] = useState({
+    fullName: authUser?.fullName || "",
+    email: authUser?.email || "",
+    bio: authUser?.bio || "",
+    status: authUser?.status || "",
+  });
 
   const handleImageUpload = async (e) => {
     const file = e.target.files[0];
@@ -24,7 +28,7 @@ const ProfilePage = () => {
   };
 
   const handleSaveProfile = async () => {
-    await updateProfile({ bio, status });
+    await updateProfile(formData);
   };
 
   return (
@@ -77,7 +81,12 @@ const ProfilePage = () => {
                 <User className="w-4 h-4" />
                 Full Name
               </div>
-              <p className="px-4 py-2.5 bg-base-200 rounded-lg border">{authUser?.fullName}</p>
+              <input
+                type="text"
+                value={formData.fullName}
+                onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+                className="w-full px-4 py-2.5 bg-base-200 rounded-lg border"
+              />
             </div>
 
             <div className="space-y-1.5">
@@ -85,7 +94,12 @@ const ProfilePage = () => {
                 <Mail className="w-4 h-4" />
                 Email Address
               </div>
-              <p className="px-4 py-2.5 bg-base-200 rounded-lg border">{authUser?.email}</p>
+              <input
+                type="display"
+                value={formData.email}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                className="w-full px-4 py-2.5 bg-base-200 rounded-lg border"
+              />
             </div>
           </div>
 
@@ -93,8 +107,8 @@ const ProfilePage = () => {
             <div className="space-y-1.5">
               <label className="text-sm text-zinc-400">Bio</label>
               <textarea
-                value={bio}
-                onChange={(e) => setBio(e.target.value)}
+                value={formData.bio}
+                onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
                 className="w-full px-4 py-2.5 bg-base-200 rounded-lg border resize-none"
                 rows={3}
                 placeholder="Tell us about yourself..."
@@ -105,8 +119,8 @@ const ProfilePage = () => {
               <label className="text-sm text-zinc-400">Status</label>
               <input
                 type="text"
-                value={status}
-                onChange={(e) => setStatus(e.target.value)}
+                value={formData.status}
+                onChange={(e) => setFormData({ ...formData, status: e.target.value })}
                 className="w-full px-4 py-2.5 bg-base-200 rounded-lg border"
                 placeholder="What's on your mind?"
               />

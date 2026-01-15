@@ -87,7 +87,7 @@ export const logout = (req, res) => {
 
 export const updateProfile = async (req, res) => {
   try {
-    const { profilePic, bio, status } = req.body;
+    const { profilePic, bio, status, fullName, email } = req.body;
     const userId = req.user._id;
 
     const updateData = {};
@@ -97,6 +97,8 @@ export const updateProfile = async (req, res) => {
     }
     if (bio !== undefined) updateData.bio = bio;
     if (status !== undefined) updateData.status = status;
+    if (fullName) updateData.fullName = fullName;
+    if (email) updateData.email = email;
 
     const updatedUser = await User.findByIdAndUpdate(
       userId,
@@ -108,6 +110,21 @@ export const updateProfile = async (req, res) => {
   } catch (error) {
     console.log("error in update profile:", error);
     res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+export const removeFriend = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const myId = req.user._id;
+
+    await User.findByIdAndUpdate(myId, { $pull: { friends: userId } });
+    await User.findByIdAndUpdate(userId, { $pull: { friends: myId } });
+
+    res.status(200).json({ message: "Friend removed successfully" });
+  } catch (error) {
+    console.log("Error in removeFriend controller", error.message);
+    res.status(500).json({ message: "Internal Server Error" });
   }
 };
 

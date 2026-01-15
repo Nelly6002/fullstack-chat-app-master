@@ -68,6 +68,21 @@ export const useAuthStore = create((set, get) => ({
     }
   },
 
+  removeFriend: async (userId) => {
+    try {
+      await axiosInstance.post(`/auth/remove-friend/${userId}`);
+      set((state) => ({
+        authUser: {
+          ...state.authUser,
+          friends: state.authUser.friends.filter((friendId) => friendId !== userId),
+        },
+      }));
+      toast.success("Friend removed");
+    } catch (error) {
+      toast.error(error.response.data.message);
+    }
+  },
+
   updateProfile: async (data) => {
     set({ isUpdatingProfile: true });
     try {
