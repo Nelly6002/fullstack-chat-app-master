@@ -82,23 +82,23 @@ const AddFriend = () => {
 
       <div className="space-y-2">
         {searchResults.map((user) => (
-          <div key={user._id} className="flex items-center justify-between p-3 bg-base-200 rounded-lg">
-            <div className="flex items-center gap-3">
+          <div key={user._id} className="flex flex-col sm:flex-row items-center justify-between p-3 bg-base-200 rounded-lg gap-3">
+            <div className="flex items-center gap-3 w-full sm:w-auto">
               <img
                 src={user.profilePic || "/avatar.png"}
                 alt={user.fullName}
                 className="size-10 rounded-full"
               />
-              <div>
-                <div className="font-medium">{user.fullName}</div>
-                <div className="text-sm text-zinc-400">{user.email}</div>
+              <div className="min-w-0">
+                <div className="font-medium truncate">{user.fullName}</div>
+                <div className="text-sm text-zinc-400 truncate">{user.email}</div>
                 {user.mutualFriends > 0 && (
                   <div className="text-xs text-blue-500">{user.mutualFriends} mutual friends</div>
                 )}
               </div>
             </div>
 
-            <div className="flex gap-2">
+            <div className="flex gap-2 w-full sm:w-auto justify-end">
               {user.status === "friend" && (
                 <button className="btn btn-xs btn-success" disabled>
                   <UserCheck size={16} />

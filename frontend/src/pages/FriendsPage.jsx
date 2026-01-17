@@ -12,33 +12,34 @@ const FriendsPage = () => {
     <div className="min-h-screen bg-base-200 pt-20">
       <div className="container mx-auto p-4">
         <div className="bg-base-100 rounded-lg shadow-lg max-w-2xl mx-auto">
-          <div className="tabs tabs-boxed p-4 flex-wrap justify-center sm:justify-start">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
             <button
-              className={`tab ${activeTab === "my-friends" ? "tab-active" : ""}`}
+              className={`btn ${activeTab === "my-friends" ? "btn-primary" : "btn-ghost"} w-full justify-start gap-3`}
               onClick={() => setActiveTab("my-friends")}
             >
-              <UserCheck size={16} className="mr-2" />
-              My Friends
+              <UserCheck size={20} />
+              <span className="hidden sm:inline">My Friends</span>
+              <span className="sm:hidden">Friends</span>
             </button>
             <button
-              className={`tab ${activeTab === "add" ? "tab-active" : ""}`}
+              className={`btn ${activeTab === "add" ? "btn-primary" : "btn-ghost"} w-full justify-start gap-3`}
               onClick={() => setActiveTab("add")}
             >
-              <UserPlus size={16} className="mr-2" />
-              Add Friends
+              <UserPlus size={20} />
+              Add Friend
             </button>
             <button
-              className={`tab ${activeTab === "requests" ? "tab-active" : ""}`}
+              className={`btn ${activeTab === "requests" ? "btn-primary" : "btn-ghost"} w-full justify-start gap-3`}
               onClick={() => setActiveTab("requests")}
             >
-              <Users size={16} className="mr-2" />
+              <Users size={20} />
               Requests
             </button>
             <button
-              className={`tab ${activeTab === "group" ? "tab-active" : ""}`}
+              className={`btn ${activeTab === "group" ? "btn-primary" : "btn-ghost"} w-full justify-start gap-3`}
               onClick={() => setActiveTab("group")}
             >
-              <MessageSquare size={16} className="mr-2" />
+              <MessageSquare size={20} />
               Create Group
             </button>
           </div>

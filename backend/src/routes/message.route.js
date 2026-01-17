@@ -5,13 +5,13 @@ import { getMessages, getUsersForSidebar, sendMessage, editMessage, deleteMessag
 const router = express.Router();
 
 router.get("/users", protectRoute, getUsersForSidebar);
+router.get("/search", protectRoute, searchMessages); // Must be before :id
 router.get("/:id", protectRoute, getMessages);
 
 router.post("/send/:id", protectRoute, sendMessage);
 
 router.put("/edit/:messageId", protectRoute, editMessage);
 router.delete("/delete/:messageId", protectRoute, deleteMessage);
-router.get("/search", protectRoute, searchMessages);
 router.post("/read/:messageId", protectRoute, markAsRead);
 
 export default router;  

@@ -61,9 +61,12 @@ const CreateGroup = () => {
           rows={3}
         />
 
-        <div>
-          <h3 className="font-medium mb-2">Select friends:</h3>
-          <div className="space-y-2 max-h-40 overflow-y-auto">
+        <div className="form-control">
+          <label className="label">
+            <span className="label-text font-medium">Select Friends</span>
+            <span className="label-text-alt">{selectedFriends.length} selected</span>
+          </label>
+          <div className="border border-base-300 rounded-lg p-2 h-48 overflow-y-auto space-y-2 bg-base-100">
             {users.map((user) => (
               <label key={user._id} className="flex items-center gap-3 cursor-pointer">
                 <input

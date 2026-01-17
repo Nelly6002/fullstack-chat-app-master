@@ -48,20 +48,20 @@ const MyFriends = () => {
                     </div>
                 ) : (
                     friends.map((friend) => (
-                        <div key={friend._id} className="flex items-center justify-between p-3 bg-base-200 rounded-lg">
-                            <div className="flex items-center gap-3">
+                        <div key={friend._id} className="flex flex-col sm:flex-row items-center justify-between p-3 bg-base-200 rounded-lg gap-3">
+                            <div className="flex items-center gap-3 w-full sm:w-auto">
                                 <img
                                     src={friend.profilePic || "/avatar.png"}
                                     alt={friend.fullName}
                                     className="size-10 rounded-full object-cover"
                                 />
-                                <div>
-                                    <div className="font-medium">{friend.fullName}</div>
-                                    <div className="text-sm text-zinc-400">{friend.email}</div>
+                                <div className="min-w-0">
+                                    <div className="font-medium truncate">{friend.fullName}</div>
+                                    <div className="text-sm text-zinc-400 truncate">{friend.email}</div>
                                 </div>
                             </div>
 
-                            <div className="flex gap-2">
+                            <div className="flex gap-2 w-full sm:w-auto justify-end">
                                 <button
                                     onClick={() => handleRemoveFriend(friend._id)}
                                     className="btn btn-xs btn-error btn-outline"

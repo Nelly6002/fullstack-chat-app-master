@@ -37,19 +37,19 @@ const FriendRequests = () => {
       ) : (
         <div className="space-y-2">
           {requests.map((request) => (
-            <div key={request._id} className="flex items-center justify-between p-3 bg-base-200 rounded-lg">
-              <div className="flex items-center gap-3">
+            <div key={request._id} className="flex flex-col sm:flex-row items-center justify-between p-3 bg-base-200 rounded-lg gap-3">
+              <div className="flex items-center gap-3 w-full sm:w-auto">
                 <img
                   src={request.from.profilePic || "/avatar.png"}
                   alt={request.from.fullName}
                   className="size-10 rounded-full"
                 />
-                <div>
-                  <div className="font-medium">{request.from.fullName}</div>
+                <div className="min-w-0">
+                  <div className="font-medium truncate">{request.from.fullName}</div>
                 </div>
               </div>
 
-              <div className="flex gap-2">
+              <div className="flex gap-2 w-full sm:w-auto justify-end">
                 <button
                   onClick={() => handleAccept(request.from._id)}
                   className="btn btn-xs btn-success"

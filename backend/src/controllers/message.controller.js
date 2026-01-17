@@ -229,6 +229,12 @@ export const searchMessages = async (req, res) => {
       }
     } else {
       // For user chat, chatId is the other user's ID
+      // Check if chatId is valid ObjectId
+      const mongoose = (await import("mongoose")).default;
+      if (!mongoose.Types.ObjectId.isValid(chatId)) {
+        return res.status(200).json([]);
+      }
+
       filter.$or = [
         { senderId: userId, receiverId: chatId },
         { senderId: chatId, receiverId: userId },

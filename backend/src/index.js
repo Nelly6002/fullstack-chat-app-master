@@ -22,7 +22,11 @@ app.use(express.urlencoded({ limit: '10mb', extended: true }));
 app.use(cookieParser());
 app.use(
   cors({
-    origin: ["https://fullstack-chat-app-master-omega.vercel.app", "https://fullstack-chat-app-master-omega.vercel.app/"],
+    origin: [
+      "http://localhost:5173",
+      "https://fullstack-chat-app-master-omega.vercel.app",
+      "https://fullstack-chat-app-master-omega.vercel.app/"
+    ],
     credentials: true,
   })
 );
