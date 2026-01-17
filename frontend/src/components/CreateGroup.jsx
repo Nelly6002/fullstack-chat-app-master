@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "../store/useAuthStore";
 import { useChatStore } from "../store/useChatStore";
 import { axiosInstance } from "../lib/axios";
@@ -12,6 +13,7 @@ const CreateGroup = () => {
   const [isCreating, setIsCreating] = useState(false);
   const { authUser } = useAuthStore();
   const { users } = useChatStore();
+  const navigate = useNavigate();
 
   const handleCreateGroup = async () => {
     if (!name.trim()) return toast.error("Group name is required");
@@ -19,10 +21,11 @@ const CreateGroup = () => {
 
     setIsCreating(true);
     try {
-      await axiosInstance.post("/groups/create", { name, description, members: selectedFriends });
+      const res = await axiosInstance.post("/groups/create", { name, description, members: selectedFriends });
       toast.success("Group created!");
-      // Refresh groups
-      window.location.reload();
+      useChatStore.getState().getGroups(); // Refresh groups list
+      useChatStore.getState().setSelectedGroup(res.data); // Select the new group
+      navigate("/"); // Go to home/chat
     } catch (error) {
       toast.error("Failed to create group");
     } finally {
