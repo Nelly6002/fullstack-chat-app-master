@@ -51,13 +51,22 @@ const ChatContainer = () => {
       messageEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
   }, [messages]);
-  const handleSearch = async (query) => {
-    if (!query.trim()) {
-      setIsSearching(false);
-      return;
-    }
-    setIsSearching(true);
-    await searchMessages(chatId, query, chatType);
+  useEffect(() => {
+    // Debounce search to prevent excessive API calls
+    const delayDebounceFn = setTimeout(() => {
+      if (searchQuery.trim()) {
+        setIsSearching(true);
+        searchMessages(chatId, searchQuery, chatType);
+      } else {
+        setIsSearching(false);
+      }
+    }, 500);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [searchQuery, chatId, chatType, searchMessages]);
+
+  const handleSearch = (e) => {
+    setSearchQuery(e.target.value);
   };
 
   const clearSearch = () => {
@@ -99,10 +108,7 @@ const ChatContainer = () => {
               type="text"
               placeholder="Search messages..."
               value={searchQuery}
-              onChange={(e) => {
-                setSearchQuery(e.target.value);
-                handleSearch(e.target.value);
-              }}
+              onChange={handleSearch}
               className="w-full input input-bordered input-sm"
             />
             {searchQuery && (

@@ -1,4 +1,4 @@
-import { X } from "lucide-react";
+import { X, LogOut } from "lucide-react";
 import { useAuthStore } from "../store/useAuthStore";
 import { useChatStore } from "../store/useChatStore";
 
@@ -30,6 +30,13 @@ const ChatHeader = () => {
             </p>
           </div>
         </div>
+
+        {/* Leave Group Button */}
+        {selectedGroup && (
+          <button onClick={() => useChatStore.getState().leaveGroup(selectedGroup._id)} className="btn btn-ghost btn-sm btn-circle mr-2" title="Leave Group">
+            <LogOut size={20} />
+          </button>
+        )}
 
         {/* Close button */}
         <button onClick={() => {

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useAuthStore } from "../store/useAuthStore";
 import { useChatStore } from "../store/useChatStore";
+import { axiosInstance } from "../lib/axios";
 import { Users, Plus } from "lucide-react";
 import toast from "react-hot-toast";
 
@@ -18,12 +19,7 @@ const CreateGroup = () => {
 
     setIsCreating(true);
     try {
-      const response = await fetch("/api/groups/create", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, description, members: selectedFriends }),
-      });
-      const group = await response.json();
+      await axiosInstance.post("/groups/create", { name, description, members: selectedFriends });
       toast.success("Group created!");
       // Refresh groups
       window.location.reload();

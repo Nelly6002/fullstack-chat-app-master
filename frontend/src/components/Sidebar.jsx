@@ -98,7 +98,9 @@ const Sidebar = () => {
             <div className="text-center lg:text-left min-w-0">
               <div className="font-medium truncate text-sm lg:text-base">{user.fullName}</div>
               <div className="text-xs text-zinc-400">
-                {onlineUsers.includes(user._id) ? "Online" : `Last seen ${new Date(user.lastSeen).toLocaleString()}`}
+                {onlineUsers.includes(user._id) ? "Online" :
+                  (user.lastSeen ? `Last seen ${new Date(user.lastSeen).toLocaleString()}` : "Offline")
+                }
               </div>
             </div>
           </button>
@@ -108,7 +110,7 @@ const Sidebar = () => {
           <div className="text-center text-zinc-500 py-4">No contacts or groups</div>
         )}
       </div>
-    </aside>
+    </aside >
   );
 };
 export default Sidebar;

@@ -49,6 +49,20 @@ export const useChatStore = create((set, get) => ({
     }
   },
 
+  leaveGroup: async (groupId) => {
+    const { authUser } = useAuthStore.getState();
+    try {
+      await axiosInstance.delete(`/groups/${groupId}/remove/${authUser._id}`);
+      set((state) => ({
+        groups: state.groups.filter((group) => group._id !== groupId),
+        selectedGroup: null,
+      }));
+      toast.success("Left group successfully");
+    } catch (error) {
+      toast.error(error.response.data.message);
+    }
+  },
+
   getMessages: async (chatId, type = 'user') => {
     set({ isMessagesLoading: true });
     try {
