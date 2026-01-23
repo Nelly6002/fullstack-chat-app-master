@@ -1,0 +1,8 @@
+{
+    "rewrites": [
+        {
+            "source": "/api/:path*",
+            "destination": "https://fullstack-chat-app-master-xydu.onrender.com/api/:path*"
+        }
+    ]
+}
